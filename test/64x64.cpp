@@ -5,17 +5,37 @@
 #include "../include/64x64.h"
 
 using namespace swarm;
-//using namespace std;
+using namespace std;
 
 int main (int argn, char** args) {
 
     assert(sizeof(base_t)== sizeof(uint64_t));
 
-    assert(base2long("0")==0);
-    assert(base2long("~")==base_t::INFINITY);
+    base_t right = ((base_t)0L);
+    base_t left = base_t("0");
+    assert( (base_t("0")) == ((base_t)0L) );
+    assert(base_t("~")==base_t::INFINITY.value);
 
-    assert(std::string(base_t(0))=="0");
+    base_t zero;
+    printf("%s\n", ((string)zero).c_str());
+    printf("%lu\n", base_t("0").value);
+
+    assert(std::string(base_t(0L))=="0");
     assert(std::string(base_t::INFINITY)=="~");
+
+    printf("%s\n", ((string)base_t::INFINITY).c_str());
+    printf("%lu\n", base_t::INFINITY.value);
+    base_t inf1 = base_t(base_t::INFINITY.value+1L);
+    printf("%s\n", ((string)inf1).c_str());
+    printf("%lu\n", inf1.value);
+
+    base_t on("on");
+
+    printf("%lu\n", on.value);
+    printf("%s\n", string(on).c_str());
+
+    base_t on00("on00");
+    printf("%lu\n", on00.value);
 
     uint64_t onval = 932808072819113984L;
     assert(base_t("on")==onval);
@@ -26,7 +46,7 @@ int main (int argn, char** args) {
     base_t::print_t pstate;
     base_t::scan_t sstate;
 
-    for(base_t i=0; i<1+64*64; ++i) {
+    for(base_t i=0L; i<1L+64*64; ++i) {
 
         bzero(&sstate, sizeof(sstate));
         bzero(&pstate,sizeof(pstate));

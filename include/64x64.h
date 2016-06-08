@@ -14,9 +14,16 @@ namespace swarm {
 
         base_t(uint64_t val64) : value(val64) { }
 
+        base_t(long int val64) : value(val64) { }
+
         base_t () : value (0) {}
 
-        base_t (std::string str64) {
+        base_t (const char* str64) : value(0) {
+            scan_t state;
+            scan(state, str64, strlen(str64));
+        }
+
+        base_t (std::string str64) : value(0) {
             scan_t state;
             scan(state, str64.c_str(), str64.length());
         }
