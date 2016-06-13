@@ -10,6 +10,10 @@ using namespace std;
 
 int main (int argn, char** args) {
 
+    setenv("TZ", "UTC", 1);
+    tzset();
+    setlocale(LC_TIME, "en_EN.utf8");
+
     char buf[1024];
     stamp_t::print_t state;
     // zero (is-zero: true), named zero
@@ -50,7 +54,7 @@ int main (int argn, char** args) {
 
     // parent-of true
     const char* str_parent = "1CQAneD+parnt";
-    const char* str_child = "1CQAnek+parntsCHILD";
+    const char* str_child = "1CQAnek+parntCHILD";
     stamp_t parent(str_parent);
     stamp_t child(str_child);
     assert(parent.isParentOf(child));
@@ -78,15 +82,15 @@ int main (int argn, char** args) {
     ser.tm_min = 50;
     stamp_t stamp_ser(ser, "my");
     char str_ser[1024];
-    setlocale(LC_TIME, "en_EN.utf8");
-    strftime(str_ser, 1024, "%a %b %d %H:%M:%S %Z %Y", &ser);
+    tm tm_ser = stamp_ser.datetime();
+    strftime(str_ser, 1024, "%a %b %d %H:%M:%S UTC %Y", &tm_ser);
     printf("%s\n%s\n", string(stamp_ser).c_str(), str_ser);
 
     // parse 1CQAn00000+my: the same timestamp untrimmed
-    const char* str_pt = "1CQAn00000+my";
+    const char* str_pt = "1CQKn00000+my";
     stamp_t pt(str_pt);
     tm time_pt = pt.datetime();
-    strftime(str_ser, 1024, "%a %b %d %H:%M:%S %Z %Y", &time_pt);
+    strftime(str_ser, 1024, "%a %b %d %H:%M:%S UTC %Y", &time_pt);
     printf("%s\n", str_ser);
 
     // is-abnormal: true (not a timestamp)
@@ -110,6 +114,7 @@ int main (int argn, char** args) {
     assert(!error.isTranscendent());
     assert(error.isAbnormal());
     assert(!error.isZero());
+    printf("%s\n", string(error).c_str());
 
     return 0;
 

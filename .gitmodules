@@ -1,0 +1,3 @@
+[submodule "swarm-protocol-docs"]
+	path = swarm-protocol-docs
+	url = https://github.com/gritzko/swarm-protocol-docs.git

@@ -1,14 +1,14 @@
 #include <stdint.h>
 #include <string>
 #include <cstring>
+#ifndef SWARMCPP_64x64_H
+#define SWARMCPP_64x64_H
 
 namespace swarm {
 
     struct base_t {
         // the number itself
         uint64_t value;
-
-    public:
 
         // Constructors
 
@@ -31,9 +31,26 @@ namespace swarm {
         bool operator == (const base_t& b) const {
             return value==b.value;
         }
-
         bool operator <  (const base_t& b) const {
             return value<b.value;
+        }
+        bool operator <=  (const base_t& b) const {
+            return value<=b.value;
+        }
+        bool operator >  (const base_t& b) const {
+            return value>b.value;
+        }
+        bool operator >=  (const base_t& b) const {
+            return value>=b.value;
+        }
+        bool isZero () const {
+            return value == 0L;
+        }
+        bool isAbnormal () const {
+            return value >= INFINITY.value;
+        }
+        bool isInfinity () const {
+            return value == INFINITY.value;
         }
 
         const base_t& operator ++ () {
@@ -83,7 +100,7 @@ namespace swarm {
 
     const uint64_t base_t::CHAR_BIT_MASK = (1 << CHAR_BITS) - 1;
     const base_t base_t::INFINITY = 63L << (6 * 9);
-    const base_t base_t::INCORRECT = UINT64_MAX;
+    const base_t base_t::INCORRECT = (1L<<60)-1;
     const char base_t::INT2CHAR[65] =
             "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~";
     const int8_t base_t::CHAR2INT[] =
@@ -102,7 +119,8 @@ namespace swarm {
             int8_t next = buf[i];
             if (next >= 128) return -1;
             uint64_t num = CHAR2INT[next];
-            if (num==-1) return -1;
+            if (num==-1)
+                return state.offset > 0 ? i : -1;
             int shift = (MAX_CHARS-state.offset-1)*CHAR_BITS;
             value |= num << shift;
             state.offset++;
@@ -146,3 +164,5 @@ namespace swarm {
     }
 
 }
+
+#endif

@@ -38,7 +38,7 @@ namespace swarm {
             }
             int month = year*12 + datetime.tm_mon;
             uint64_t t = (uint64_t)month;
-            t <<= 12;
+            t <<= 6;
             t |= datetime.tm_mday-1;
             t <<= 6;
             t |= datetime.tm_hour;
@@ -106,8 +106,9 @@ namespace swarm {
             int months = int(t);
             ret.tm_mon = months%12;
             ret.tm_year = (months/12) + 110;
-            // FIXME normalize
-            return ret;
+            time_t epoch = mktime(&ret);
+            tm utc = *gmtime(&epoch);
+            return utc;
         }
 
         bool isParentOf (const stamp_t& child) const {
@@ -182,7 +183,7 @@ namespace swarm {
             state.stage = 1;
         }
         if (state.stage==1) {
-            if (isTranscendent()) {
+            if (origin.isZero()) {
                 state.stage = 0;
                 state.state = base_t::print_t();
                 return offset;
