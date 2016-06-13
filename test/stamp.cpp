@@ -15,7 +15,7 @@ int main (int argn, char** args) {
     setlocale(LC_TIME, "en_EN.utf8");
 
     char buf[1024];
-    stamp_t::parser_t parser;
+    //stamp_t::parser_t parser;
     // zero (is-zero: true), named zero
     const char* str0 = "0";
     stamp_t zero(str0);
@@ -115,6 +115,17 @@ int main (int argn, char** args) {
     assert(error.isAbnormal());
     assert(!error.isZero());
     printf("%s\n", string(error).c_str());
+
+    const char* str_by1 = "something+original";
+    stamp_t::parser_t parser;
+    stamp_t by1;
+    for(int i=0; i<=strlen(str_by1); i++)
+        parser.scan(by1, str_by1+i, 1);
+    int j=0;
+    while (parser.print(by1, buf+j, 1)!=0)
+        j++;
+    buf[j] = 0;
+    assert(0==strcmp(str_by1, buf));
 
     return 0;
 
