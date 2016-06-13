@@ -149,10 +149,12 @@ namespace swarm {
             stage = 2;
         }
         if (stage==2) {
-            offset += parser.scan(target.origin, buf+offset, length-offset);
-            if (offset<0) {
-                return offset;
-            } else if (offset==length) {
+            int ret = parser.scan(target.origin, buf+offset, length-offset);
+            if (ret<0) {
+                return ret;
+            }
+            offset += ret;
+            if (offset==length) {
                 return offset;
             }
             stage = 0;

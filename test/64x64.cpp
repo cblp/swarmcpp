@@ -26,7 +26,7 @@ int main (int argn, char** args) {
     printf("%s\n", ((string)base_t::INFINITY).c_str());
     printf("%lu\n", base_t::INFINITY.value);
     base_t inf1 = base_t(base_t::INFINITY.value+1L);
-    printf("%s\n", ((string)inf1).c_str());
+    printf("%s\n", string(inf1).c_str());
     printf("%lu\n", inf1.value);
 
     base_t on("on");
@@ -46,7 +46,6 @@ int main (int argn, char** args) {
     base_t::parser_t parser;
 
     for(base_t i=0L; i<1L+64*64; ++i) {
-
 
         bzero(&parser,sizeof(parser));
         int len = parser.print(i, buf, 10);
