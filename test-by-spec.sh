@@ -4,7 +4,10 @@ TESTDIR="swarm-protocol-docs/test"
 if [ ! -e $TESTDIR ]; then
     git submodule init
 fi
-git submodule update
+cd swarm-protocol-docs
+git checkout master
+git pull
+cd -
 
 rm -rf tmp
 mkdir tmp
