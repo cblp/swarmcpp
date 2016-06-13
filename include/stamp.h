@@ -132,9 +132,9 @@ namespace swarm {
         int offset = 0;
         if (stage==0) {
             offset = parser.scan(target.time, buf, length);
-            if (offset==length) { // FIXME invalidate on -1
+            if (offset<0) {
                 return offset;
-            } else if (offset<0) {
+            } else if (offset==length) {
                 return offset;
             }
             parser = base_t::parser_t();
@@ -150,7 +150,7 @@ namespace swarm {
         }
         if (stage==2) {
             offset += parser.scan(target.origin, buf+offset, length-offset);
-            if (offset<0) { // FIXME  -1
+            if (offset<0) {
                 return offset;
             } else if (offset==length) {
                 return offset;

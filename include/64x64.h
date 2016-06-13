@@ -110,10 +110,18 @@ namespace swarm {
         int i = 0;
         while (i < length && offset < MAX_CHARS) {
             int8_t next = buf[i];
-            if (next >= 128) return -1;
+            if (next >= 128) {
+                target = base_t::INCORRECT;
+                return -1;
+            }
             uint64_t num = (uint64_t) CHAR2INT[next];
-            if (num==-1)
-                return offset > 0 ? i : -1;
+            if (num==-1) {
+                if (offset==0) {
+                    target = base_t::INCORRECT;
+                    return -1;
+                }
+                return i;
+            }
             int shift = (MAX_CHARS-offset-1)*CHAR_BITS;
             target.value |= num << shift;
             offset++;
