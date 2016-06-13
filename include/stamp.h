@@ -8,10 +8,6 @@
 #include <cstring>
 #include "64x64.h"
 
-// TODO
-// [ ] size_t for scan/print
-// [ ] scan/print methods of scan_t
-
 namespace swarm {
 
     struct stamp_t {
@@ -22,12 +18,12 @@ namespace swarm {
         stamp_t (const stamp_t& copy) : time (copy.time), origin(copy.origin) {}
 
         stamp_t (const char* stamp) : time(), origin() {
-            scan_t state;
-            scan(state, stamp, (int)strlen(stamp));
+            parser_t parser;
+            parser.scan(*this, stamp, (int)strlen(stamp)+1);
         }
         stamp_t (std::string stamp) {
-            scan_t state;
-            scan(state, stamp.c_str(), (int)stamp.length());
+            parser_t parser;
+            parser.scan(*this, stamp.c_str(), (int)stamp.length());
         }
 
         stamp_t (tm datetime, base_t orig) : origin(orig) {
@@ -68,9 +64,9 @@ namespace swarm {
 
         operator std::string () const {
             char buf[22];
-            print_t state;
-            int length = print(state, buf, 22);
-            return std::string(buf, length);
+            parser_t parser;
+            int length = parser.print(*this, buf, 22);
+            return std::string(buf, (size_t)length);
         }
 
         bool isTranscendent () const {
@@ -121,85 +117,80 @@ namespace swarm {
             return a==b;
         }
 
-        struct scan_t {
-            scan_t () : stage(0), state() {}
+        struct parser_t {
             int stage;
-            base_t::scan_t state;
-        };
-        struct print_t {
-            print_t () : stage(0), state() {}
-            int stage;
-            base_t::print_t state;
+            base_t::parser_t parser;
+            parser_t () : stage(0), parser() {}
+            int scan(stamp_t &target, const char *buf, int length);
+            int print(const stamp_t &target, char *buf, int length);
         };
 
-        int scan(scan_t &state, const char *buf, int length);
-        int print(print_t &state, char *buf, int length) const;
 
     };
 
-    int stamp_t::scan(stamp_t::scan_t &state, const char *buf, int length) {
+    int stamp_t::parser_t::scan(stamp_t &target, const char *buf, int length) {
         int offset = 0;
-        if (state.stage==0) {
-            offset = time.scan(state.state, buf, length);
+        if (stage==0) {
+            offset = parser.scan(target.time, buf, length);
             if (offset==length) { // FIXME invalidate on -1
                 return offset;
             } else if (offset<0) {
                 return offset;
             }
-            state.state = base_t::scan_t();
-            state.stage = 1;
+            parser = base_t::parser_t();
+            stage = 1;
         }
-        if (state.stage==1) {
+        if (stage==1) {
             if (buf[offset]!='+') {
-                origin = base_t();
+                target.origin = base_t();
                 return offset;
             }
             offset++;
-            state.stage = 2;
+            stage = 2;
         }
-        if (state.stage==2) { // FIXME 0 terminator
-            offset += origin.scan(state.state, buf+offset, length-offset);
+        if (stage==2) {
+            offset += parser.scan(target.origin, buf+offset, length-offset);
             if (offset<0) { // FIXME  -1
                 return offset;
             } else if (offset==length) {
                 return offset;
             }
-            state.stage = 0;
-            state.state = base_t::scan_t();
+            stage = 0;
+            parser = base_t::parser_t();
         }
         return offset;
     }
 
-    int stamp_t::print(stamp_t::print_t &state, char *buf, int length) const {
+    int stamp_t::parser_t::print(const stamp_t &target, char *buf, int length) {
         int offset = 0;
-        if (state.stage==0) {
-            offset = time.print(state.state, buf, length);
+        if (stage==0) {
+            offset = parser.print(target.time, buf, length);
             if (offset<0) {
                 return offset;
             } else if (offset==length) {
                 return offset;
             }
-            state.state = base_t::print_t();
-            state.stage = 1;
+            parser = base_t::parser_t();
+            stage = 1;
         }
-        if (state.stage==1) {
-            if (origin.isZero()) {
-                state.stage = 0;
-                state.state = base_t::print_t();
+        if (stage==1) {
+            if (target.origin.isZero()) {
+                stage = 0;
+                parser = base_t::parser_t();
                 return offset;
             }
             buf[offset++] = '+';
-            state.stage = 2;
+            stage = 2;
         }
-        if (state.stage==2) {
-            offset += origin.print(state.state, buf+offset, length-offset);
+        if (stage==2) {
+            offset += parser.print(target.origin, buf+offset, length-offset);
             if (offset<0) {
                 return offset;
             } else if (offset==length) {
                 return offset;
             }
-            state.state = base_t::print_t();
-            state.stage = 0;
+            parser = base_t::parser_t();
+            stage = 0;
         }
         return offset;
     }

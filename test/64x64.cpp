@@ -43,20 +43,19 @@ int main (int argn, char** args) {
     assert(std::string(base_t(onval))=="on");
 
     char buf[10];
-    base_t::print_t pstate;
-    base_t::scan_t sstate;
+    base_t::parser_t parser;
 
     for(base_t i=0L; i<1L+64*64; ++i) {
 
-        bzero(&sstate, sizeof(sstate));
-        bzero(&pstate,sizeof(pstate));
 
-        int len = i.print(pstate, buf, 10);
+        bzero(&parser,sizeof(parser));
+        int len = parser.print(i, buf, 10);
         assert(len<=10);
         assert(len>0);
 
+        bzero(&parser,sizeof(parser));
         base_t j;
-        int len2 = j.scan(sstate, buf, len);
+        int len2 = parser.scan(j, buf, len);
         assert(len2==len);
         assert(i==j);
 

@@ -1,8 +1,8 @@
+#ifndef SWARMCPP_64x64_H
+#define SWARMCPP_64x64_H
 #include <stdint.h>
 #include <string>
 #include <cstring>
-#ifndef SWARMCPP_64x64_H
-#define SWARMCPP_64x64_H
 
 namespace swarm {
 
@@ -19,13 +19,13 @@ namespace swarm {
         base_t () : value (0) {}
 
         base_t (const char* str64) : value(0) {
-            scan_t state;
-            scan(state, str64, strlen(str64));
+            parser_t parser;
+            parser.scan(*this, str64, strlen(str64)+1);
         }
 
         base_t (std::string str64) : value(0) {
-            scan_t state;
-            scan(state, str64.c_str(), str64.length());
+            parser_t parser;
+            parser.scan(*this, str64.c_str(), str64.length());
         }
 
         bool operator == (const base_t& b) const {
@@ -60,8 +60,8 @@ namespace swarm {
 
         operator std::string() const {
             char str[11];
-            print_t state;
-            return std::string(str, print(state,str,11));
+            parser_t parser;
+            return std::string(str, (size_t)parser.print(*this,str,11));
         }
 
         // Constants
@@ -75,26 +75,19 @@ namespace swarm {
         static const char INT2CHAR[];
         static const int8_t CHAR2INT[128];
 
-        // Generic (de)serialization API.
-
-        struct scan_t {
-            scan_t () : offset(0) {}
+        // perser/serializer type
+        struct parser_t {
             int offset;
+            parser_t () : offset(0) {}
+            // read a base64x64 number from the buffer;
+            // @return i<length if read completely or
+            // i==length if need more data (possibly)
+            int scan(base_t& target, const char *buf, int length);
+
+            // print a base64x64 number to a buffer
+            // @return i<length if complete, i==length if needs more space
+            int print(const base_t& target, char *buf, int length);
         };
-
-        struct print_t {
-            print_t () : offset(0) {}
-            int offset;
-        } ;
-
-        // read a base64x64 number from the buffer;
-        // @return i<length if read completely or
-        // i==length if need more data (possibly)
-        int scan(scan_t &state, const char *buf, int length);
-
-        // print a base64x64 number to a buffer
-        // @return i<length if complete, i==length if needs more space
-        int print(print_t &state, char *buf, int length) const;
 
     };
 
@@ -113,54 +106,36 @@ namespace swarm {
              58, 59, 60, 61, 62,-1,-1,-1, 63, -1};
 
 
-    int base_t::scan(scan_t &state, const char *buf, int length) {
+    int base_t::parser_t::scan(base_t& target, const char *buf, int length) {
         int i = 0;
-        while (i < length && state.offset < MAX_CHARS) {
+        while (i < length && offset < MAX_CHARS) {
             int8_t next = buf[i];
             if (next >= 128) return -1;
-            uint64_t num = CHAR2INT[next];
+            uint64_t num = (uint64_t) CHAR2INT[next];
             if (num==-1)
-                return state.offset > 0 ? i : -1;
-            int shift = (MAX_CHARS-state.offset-1)*CHAR_BITS;
-            value |= num << shift;
-            state.offset++;
+                return offset > 0 ? i : -1;
+            int shift = (MAX_CHARS-offset-1)*CHAR_BITS;
+            target.value |= num << shift;
+            offset++;
             i++;
         }
         return i;
     }
 
-    int base_t::print(print_t &state, char *buf, int length) const {
+    int base_t::parser_t::print(const base_t& target, char *buf, int length) {
         int i = 0;
-        while (state.offset < MAX_CHARS && i < length) {
-            int shift = (MAX_CHARS - state.offset - 1) * CHAR_BITS;
-            int charVal = (value >> shift) & CHAR_BIT_MASK;
-            if (charVal==0 && state.offset>0 && ((value>>shift)<<shift)==value) {
+        const uint64_t & value = target.value;
+        while (offset < MAX_CHARS && i < length) {
+            int shift = (MAX_CHARS - offset - 1) * CHAR_BITS;
+            int charVal = int ((value >> shift) & CHAR_BIT_MASK);
+            if (charVal==0 && offset>0 && ((value>>shift)<<shift)==value) {
                 return i;
             }
             buf[i] = INT2CHAR[charVal];
             i++;
-            state.offset++;
+            offset++;
         }
         return i;
-    }
-
-    base_t base2long(const char *buf, int length) {
-        base_t ret;
-        base_t::scan_t state;
-        bzero(&state, sizeof(base_t::scan_t));
-        int read = ret.scan(state, buf, length);
-        if (read != length)
-            return base_t::INCORRECT;
-        else
-            return ret;
-    }
-
-    base_t base2long(const std::string &str) {
-        return base2long(str.c_str(), str.length());
-    }
-
-    base_t base2long(const char *str) {
-        return base2long(str, strlen(str));
     }
 
 }

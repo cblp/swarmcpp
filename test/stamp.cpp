@@ -15,7 +15,7 @@ int main (int argn, char** args) {
     setlocale(LC_TIME, "en_EN.utf8");
 
     char buf[1024];
-    stamp_t::print_t state;
+    stamp_t::parser_t parser;
     // zero (is-zero: true), named zero
     const char* str0 = "0";
     stamp_t zero(str0);

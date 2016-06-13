@@ -5,14 +5,16 @@ if [ ! -e $TESTDIR ]; then
     git submodule init
 fi
 cd swarm-protocol-docs
-git checkout master
-git pull
+#git checkout master
+#git pull
+git log | head -6
 cd -
 
 rm -rf tmp
 mkdir tmp
 
 make || exit -1
+echo
 
 grep -v '^;' $TESTDIR/64x64.batt > tmp/64x64.ok
 ./test64x64 > tmp/64x64.out
