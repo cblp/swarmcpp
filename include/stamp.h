@@ -26,6 +26,9 @@ namespace swarm {
             parser.scan(*this, stamp.c_str(), (int)stamp.length());
         }
 
+        stamp_t (const base_t& timeval, const base_t& origin_val) :
+            time(timeval), origin(origin_val) {}
+
         stamp_t (tm datetime, base_t orig) : origin(orig) {
             int year = datetime.tm_year - 110;
             if (year<0) {
@@ -45,6 +48,10 @@ namespace swarm {
             t <<= 4*6; // msec, seq
             time = t;
         }
+
+        static const stamp_t ERROR;
+        static const stamp_t ZERO;
+        static const int MAX_CHARS = base_t::MAX_CHARS*2+1;
 
         bool operator == (const stamp_t& b) const {
             return time==b.time && origin==b.origin;
@@ -127,6 +134,9 @@ namespace swarm {
 
 
     };
+
+    const stamp_t stamp_t::ZERO(0L, 0L);
+    const stamp_t stamp_t::ERROR(base_t::INCORRECT, 0L);
 
     int stamp_t::parser_t::scan(stamp_t &target, const char *buf, int length) {
         int offset = 0;

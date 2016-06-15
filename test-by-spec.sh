@@ -25,3 +25,9 @@ grep -v '^;' $TESTDIR/stamp.batt | grep -v '^$' > tmp/stamp.ok
 ./teststamp > tmp/stamp.out
 diff -BU3 tmp/stamp.out tmp/stamp.ok || exit -2
 echo OK stamp
+
+grep -v '^;' $TESTDIR/spec.batt | grep -v '^$'  > tmp/spec.ok
+./testspec > tmp/spec.out
+diff -BU3 tmp/spec.out tmp/spec.ok || exit -2
+echo OK spec
+
