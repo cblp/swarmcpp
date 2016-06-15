@@ -80,8 +80,6 @@ namespace swarm {
         int offset = 0;
         while (offset<length) {
             if (phase==0) {
-                //while (buf[offset]=='\n' && offset<length) offset++;
-                //if (offset==length) return offset;
                 char q = buf[offset];
                 const char* qp = strchr(QUANTS, q);
                 if (qp==0) return -1;
@@ -91,7 +89,6 @@ namespace swarm {
                 phase = 1;
                 offset++;
             }
-            // FIXME: we don't touch missing tokens
             parser = stamp_t::parser_t();
             int ret = parser.scan(memory[quant], buf+offset, length-offset);
             if (ret<0) {
@@ -116,7 +113,6 @@ namespace swarm {
         int offset = 0;
         while (offset<length && quant<4) {
             if (phase==0) {
-                //printf("%i %s %i %s\n", offset, buf, quant, QUANTS);
                 if (memory[quant]==target.tok[quant]) {
                     quant++;
                     continue;
@@ -125,7 +121,6 @@ namespace swarm {
                 phase = 1;
                 if (offset==length) break;
             }
-            // FIXME: default values
             offset += parser.print(target.tok[quant], buf+offset, length-offset);
             if (offset<length) {
                 quant++;
