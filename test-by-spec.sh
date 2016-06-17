@@ -31,3 +31,8 @@ grep -v '^;' $TESTDIR/spec.batt | grep -v '^$'  > tmp/spec.ok
 diff -BU3 tmp/spec.out tmp/spec.ok || exit -2
 echo OK spec
 
+grep -v '^;' $TESTDIR/op.batt | grep -v '^$'  > tmp/op.ok
+./testop > tmp/op.out
+diff -BU3 tmp/op.out tmp/op.ok || exit -2
+echo OK op
+

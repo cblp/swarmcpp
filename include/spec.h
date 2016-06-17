@@ -50,6 +50,10 @@ namespace swarm {
             return name()==stamp_t::ZERO;
         }
 
+        bool isSameObject (const spec_t& b) const {
+            return type()==b.type() && id()==b.id();
+        }
+
         operator std::string () const {
             char ret[MAX_CHARS];
             parser_t p;
