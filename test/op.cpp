@@ -1,7 +1,7 @@
 //
 // Created by gritzko on 6/16/16.
 //
-#include "../include/op.h"
+#include "../include/swarm.h"
 #include <assert.h>
 
 using namespace swarm;
