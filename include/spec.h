@@ -72,15 +72,15 @@ namespace swarm {
             stamp_t memory[4];
             stamp_t::parser_t parser;
             parser_t () : phase(0), quant(0), parser() {}
-            int scan(spec_t &target, const char *buf, int length);
-            int print(const spec_t &target, char *buf, int length);
+            int scan(spec_t &target, const char *buf, size_t length);
+            int print(const spec_t &target, char *buf, size_t length);
         };
     };
 
     const char* spec_t::QUANTS = "/#!.";
     const stamp_t spec_t::ON("on");
 
-    int spec_t::parser_t::scan(spec_t &target, const char *buf, int length) {
+    int spec_t::parser_t::scan(spec_t &target, const char *buf, size_t length) {
         int offset = 0;
         while (offset<length) {
             if (phase==0) {
@@ -113,7 +113,7 @@ namespace swarm {
         return offset;
     }
 
-    int spec_t::parser_t::print(const spec_t &target, char *buf, int length) {
+    int spec_t::parser_t::print(const spec_t &target, char *buf, size_t length) {
         int offset = 0;
         while (offset<length && quant<4) {
             if (phase==0) {

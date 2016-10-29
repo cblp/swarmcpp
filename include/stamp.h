@@ -6,6 +6,7 @@
 #define SWARMCPP_STAMP_H
 
 #include <cstring>
+#include <clocale>
 #include "64x64.h"
 
 namespace swarm {
@@ -128,8 +129,8 @@ namespace swarm {
             int stage;
             base_t::parser_t parser;
             parser_t () : stage(0), parser() {}
-            int scan(stamp_t &target, const char *buf, int length);
-            int print(const stamp_t &target, char *buf, int length);
+            int scan(stamp_t &target, const char *buf, size_t length);
+            int print(const stamp_t &target, char *buf, size_t length);
         };
 
 
@@ -138,7 +139,7 @@ namespace swarm {
     const stamp_t stamp_t::ZERO(0L, 0L);
     const stamp_t stamp_t::ERROR(base_t::INCORRECT, 0L);
 
-    int stamp_t::parser_t::scan(stamp_t &target, const char *buf, int length) {
+    int stamp_t::parser_t::scan(stamp_t &target, const char *buf, size_t length) {
         int offset = 0;
         if (stage==0) {
             offset = parser.scan(target.time, buf, length);
@@ -173,7 +174,7 @@ namespace swarm {
         return offset;
     }
 
-    int stamp_t::parser_t::print(const stamp_t &target, char *buf, int length) {
+    int stamp_t::parser_t::print(const stamp_t &target, char *buf, size_t length) {
         int offset = 0;
         if (stage==0) {
             offset = parser.print(target.time, buf, length);

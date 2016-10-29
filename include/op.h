@@ -9,6 +9,7 @@
 #include <string>
 #include <cstring>
 #include <memory>
+#include <cstdlib>
 
 #include "spec.h"
 
@@ -100,17 +101,17 @@ namespace swarm {
             static const int SEPARATOR_ERROR = -2;
             static const int VALUE_LENGTH_ERROR = -3;
 
-            int scan(op_t& target, const char *buf, int length);
-            int print(const op_t& target, char *buf, int length);
+            int scan(op_t& target, const char *buf, size_t length);
+            int print(const op_t& target, char *buf, size_t length);
 
-            int append_bytes (op_t& target, const char* buf, int size);
+            int append_bytes (op_t& target, const char* buf, size_t size);
         };
     };
 
     const stamp_t op_t::ON = stamp_t("on");
     const stamp_t op_t::STATE = stamp_t("~");
 
-    int op_t::parser_t::append_bytes (op_t& target, const char* buf, int size) {
+    int op_t::parser_t::append_bytes (op_t& target, const char* buf, size_t size) {
         int free_bytes = value_pos - target.size;
         if (free_bytes<size) {
             value_pos<<=1;
@@ -121,8 +122,9 @@ namespace swarm {
         target.size += size;
     }
 
-    int op_t::parser_t::scan(op_t& target, const char *buf, int length) {
-        int offset = 0, ret, take;
+    int op_t::parser_t::scan(op_t& target, const char *buf, size_t length) {
+        size_t offset = 0;
+        int ret, take;
         while (offset < length) {
 
             //printf("%i %i %s\n", offset, stage, std::string(buf,offset).c_str());
@@ -213,7 +215,7 @@ namespace swarm {
                         }
                     } else {
                         value_pos <<= 6; // FIXME SEPARATE EM, DEFINE EM
-                        if (buf[offset]>=128) return VALUE_LENGTH_ERROR;
+                        if (buf[offset]<0) return VALUE_LENGTH_ERROR;
                         int8_t i = base_t::CHAR2INT[buf[offset]];
                         if (i==-1) return VALUE_LENGTH_ERROR;
                         value_pos |= i;
@@ -223,7 +225,9 @@ namespace swarm {
                     break;
 
                 case BUFFER:
-                    take = std::min(length-offset, value_pos-target.size);
+                    size_t take = length-offset;
+                    size_t take2 = value_pos-target.size;
+                    if (take2<take) take=take2;
                     //printf("!!%s!%s,%i,%i\n", buf+offset, target.value.get(), target.size, value_pos);
                     append_bytes(target, buf+offset, take);
                     offset += take;
@@ -237,8 +241,9 @@ namespace swarm {
         }
     }
 
-    int op_t::parser_t::print(const op_t& target, char *buf, int length) {
-        int offset = 0, ret, fits, has_nl, i;
+    int op_t::parser_t::print(const op_t& target, char *buf, size_t length) {
+        size_t offset = 0, fits, fits2;
+        int ret, has_nl, i;
         char next;
         while (offset<length) {
 
@@ -321,7 +326,9 @@ namespace swarm {
                     break;
 
                 case BUFFER:
-                    fits = std::min(length-offset, target.size-value_pos);
+                    fits = length-offset;
+                    fits2 = target.size-value_pos;
+                    if (fits2<fits) fits=fits2;
                     memcpy(buf+offset, target.value.get(), fits);
                     offset += fits;
                     value_pos += fits;

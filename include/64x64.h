@@ -82,11 +82,11 @@ namespace swarm {
             // read a base64x64 number from the buffer;
             // @return i<length if read completely or
             // i==length if need more data (possibly)
-            int scan(base_t& target, const char *buf, int length);
+            int scan(base_t& target, const char *buf, size_t length);
 
             // print a base64x64 number to a buffer
             // @return i<length if complete, i==length if needs more space
-            int print(const base_t& target, char *buf, int length);
+            int print(const base_t& target, char *buf, size_t length);
         };
 
     };
@@ -106,10 +106,10 @@ namespace swarm {
              58, 59, 60, 61, 62,-1,-1,-1, 63, -1};
 
 
-    int base_t::parser_t::scan(base_t& target, const char *buf, int length) {
+    int base_t::parser_t::scan(base_t& target, const char *buf, size_t length) {
         int i = 0;
         while (i < length && offset < MAX_CHARS) {
-            int8_t next = buf[i];
+            uint8_t next = buf[i];
             if (next >= 128) {
                 target = base_t::INCORRECT;
                 return -1;
@@ -130,8 +130,9 @@ namespace swarm {
         return i;
     }
 
-    int base_t::parser_t::print(const base_t& target, char *buf, int length) {
+    int base_t::parser_t::print(const base_t& target, char *buf, size_t length) {
         int i = 0;
+        // TODO simplify
         const uint64_t & value = target.value;
         while (offset < MAX_CHARS && i < length) {
             int shift = (MAX_CHARS - offset - 1) * CHAR_BITS;
