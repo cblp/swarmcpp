@@ -13,7 +13,7 @@ int main (int argn, char** args) {
     assert(sizeof(base_t)== sizeof(uint64_t));
 
     assert( (base_t("0")) == ((base_t)0L) );
-    assert(base_t("~")==base_t::INFINITY.value);
+    assert(base_t("~")==base_t::INFINITE.value);
 
     base_t zero;
     string z(zero);
@@ -21,11 +21,11 @@ int main (int argn, char** args) {
     printf("%" PRIu64 "\n", base_t("0").value);
 
     assert(std::string(base_t(0L))=="0");
-    assert(std::string(base_t::INFINITY)=="~");
+    assert(std::string(base_t::INFINITE)=="~");
 
-    printf("%s\n", ((string)base_t::INFINITY).c_str());
-    printf("%" PRIu64 "\n", base_t::INFINITY.value);
-    base_t inf1 = base_t(base_t::INFINITY.value+1L);
+    printf("%s\n", ((string)base_t::INFINITE).c_str());
+    printf("%" PRIu64 "\n", base_t::INFINITE.value);
+    base_t inf1 = base_t(base_t::INFINITE.value+1L);
     printf("%s\n", string(inf1).c_str());
     printf("%" PRIu64 "\n", inf1.value);
 
@@ -45,15 +45,14 @@ int main (int argn, char** args) {
     for(base_t i=0L; i<=4096L; ++i) {
 
         char buf[11];
-        base_t::parser_t parser;
-        int len = parser.print(i, buf, 10);
+        slice_t slice(buf,10);
+        i.print(slice, 0);
+        *slice = 0;
+        size_t len = slice.from-buf;
         assert(len<=10);
         assert(len>0);
 
-        base_t::parser_t scanner;
-        base_t j;
-        int len2 = scanner.scan(j, buf, len);
-        assert(len2==len);
+        base_t j(buf);
         assert(i==j);
 
         buf[len] = 0;

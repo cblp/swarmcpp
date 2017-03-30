@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string>
 #include <cstring>
+#include "slice.h"
 
 namespace swarm {
 
@@ -19,13 +20,13 @@ namespace swarm {
         base_t () : value (0) {}
 
         base_t (const char* str64) : value(0) {
-            parser_t parser;
-            parser.scan(*this, str64, strlen(str64)+1);
+            const_slice_t slice(str64);
+            assert(scan(slice, 0)==result_t::DONE);
         }
 
-        base_t (std::string str64) : value(0) {
-            parser_t parser;
-            parser.scan(*this, str64.c_str(), str64.length());
+        base_t (const std::string str64) {
+            const_slice_t slice(str64.c_str());
+            assert(scan(slice, 0)==result_t::DONE);
         }
 
         bool operator == (const base_t& b) const {
@@ -47,10 +48,10 @@ namespace swarm {
             return value == 0L;
         }
         bool isAbnormal () const {
-            return value >= INFINITY.value;
+            return value >= INFINITE.value;
         }
-        bool isInfinity () const {
-            return value == INFINITY.value;
+        bool isINFINITE () const {
+            return value == INFINITE.value;
         }
 
         const base_t& operator ++ () {
@@ -60,8 +61,10 @@ namespace swarm {
 
         operator std::string() const {
             char str[11];
-            parser_t parser;
-            return std::string(str, (size_t)parser.print(*this,str,11));
+            slice_t slice(str,10);
+            print(slice, 0);
+            *slice = 0;
+            return std::string(str, slice.from-str);
         }
 
         // Constants
@@ -70,29 +73,25 @@ namespace swarm {
         static const int MAX_CHARS = 10;
         static const int MAX_BITS = CHAR_BITS * MAX_CHARS;
         static const uint64_t CHAR_BIT_MASK;
-        static const base_t INFINITY;
+        static const base_t INFINITE;
         static const base_t INCORRECT;
         static const char INT2CHAR[];
         static const int8_t CHAR2INT[128];
+        static const base_t ZERO;
 
-        // perser/serializer type
-        struct parser_t {
-            int offset;
-            parser_t () : offset(0) {}
-            // read a base64x64 number from the buffer;
-            // @return i<length if read completely or
-            // i==length if need more data (possibly)
-            int scan(base_t& target, const char *buf, size_t length);
+        // static utils
 
-            // print a base64x64 number to a buffer
-            // @return i<length if complete, i==length if needs more space
-            int print(const base_t& target, char *buf, size_t length);
-        };
+        inline static int8_t char2int8 (uint8_t char64) { return CHAR2INT[char64]; }
+
+        int scan (const_slice_t& buf, size_t bm);
+
+        int print (slice_t& buf, size_t bm) const;
 
     };
 
+    const base_t base_t::ZERO = base_t();
     const uint64_t base_t::CHAR_BIT_MASK = (1 << CHAR_BITS) - 1;
-    const base_t base_t::INFINITY = 63L << (6 * 9);
+    const base_t base_t::INFINITE = 63L << (6 * 9);
     const base_t base_t::INCORRECT = (1L<<60)-1;
     const char base_t::INT2CHAR[65] =
             "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~";
@@ -106,45 +105,41 @@ namespace swarm {
              58, 59, 60, 61, 62,-1,-1,-1, 63, -1};
 
 
-    int base_t::parser_t::scan(base_t& target, const char *buf, size_t length) {
-        int i = 0;
-        while (i < length && offset < MAX_CHARS) {
-            uint8_t next = buf[i];
-            if (next >= 128) {
-                target = base_t::INCORRECT;
-                return -1;
-            }
-            uint64_t num = (uint64_t) CHAR2INT[next];
-            if (num==-1) {
-                if (offset==0) {
-                    target = base_t::INCORRECT;
-                    return -1;
-                }
-                return i;
-            }
-            int shift = (MAX_CHARS-offset-1)*CHAR_BITS;
-            target.value |= num << shift;
-            offset++;
-            i++;
+    int base_t::scan (const_slice_t& buf, size_t pos) {
+        while (!buf.empty() && pos<10) {
+            char c = *buf;
+            if (c<0 || c>127) break;
+            const int8_t i = CHAR2INT[c];
+            if (i==-1) break;
+            value = (value<<6) | i;
+            pos++;
+            buf.skip();
         }
-        return i;
+        if (buf.empty() && pos<10) {
+            return result_t::INCOMPLETE;
+        } else if (pos==0) {
+            return result_t::BAD_INPUT;
+        } else {
+            while (pos++<10) value <<= 6;
+            return result_t::DONE;
+        }
     }
 
-    int base_t::parser_t::print(const base_t& target, char *buf, size_t length) {
-        int i = 0;
-        // TODO simplify
-        const uint64_t & value = target.value;
-        while (offset < MAX_CHARS && i < length) {
-            int shift = (MAX_CHARS - offset - 1) * CHAR_BITS;
-            int charVal = int ((value >> shift) & CHAR_BIT_MASK);
-            if (charVal==0 && offset>0 && ((value>>shift)<<shift)==value) {
-                return i;
-            }
-            buf[i] = INT2CHAR[charVal];
-            i++;
-            offset++;
+    int base_t::print (slice_t& buf, size_t bm) const {
+        int len = 10;
+        uint64_t v = value;
+        while (!(v&63) && len>1) {
+            v >>= 6;
+            len--;
         }
-        return i;
+        if (buf.size()<len) return result_t::INCOMPLETE;
+        int i; //FIXME
+        for(i=len-1; i>=0; --i) {
+            buf[i] = INT2CHAR[v&63];
+            v >>= 6;
+        }
+        buf.skip(len);
+        return i==-1;
     }
 
 }

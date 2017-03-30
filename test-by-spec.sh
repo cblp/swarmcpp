@@ -18,13 +18,19 @@ if [ ! -e Makefile ]; then
     cmake CMakeLists.txt || exit 1
 fi
 
-make || exit 2
-echo
+HEADERS="64x64"
 
-grep -v '^;' $TESTDIR/64x64.batt > tmp/64x64.ok
-./test64x64 > tmp/64x64.out
-diff -BU3 tmp/64x64.out tmp/64x64.ok || exit 3
-echo OK 64x64
+for HEADER in $HEADERS; do
+    echo testing $HEADER
+    TEST="test$HEADER"
+    make "test$HEADER" || exit 2
+    echo
+    grep -v '^;' $TESTDIR/$HEADER.batt > tmp/$HEADER.ok
+    sh -c "./test$HEADER" > tmp/$HEADER.out
+    diff -BU3 tmp/$HEADER.out tmp/$HEADER.ok || exit 3
+    echo OK $HEADER
+done
+exit 1
 
 grep -v '^;' $TESTDIR/stamp.batt | grep -v '^$' > tmp/stamp.ok
 ./teststamp > tmp/stamp.out
