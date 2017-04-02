@@ -26,3 +26,7 @@
 *.exe
 *.out
 *.app
+
+# temporary build and test files
+/build
+/tmp
