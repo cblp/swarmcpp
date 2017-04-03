@@ -1,14 +1,12 @@
 #ifndef SWARMCPP_SLICE_H
 #define SWARMCPP_SLICE_H
-#include <stdint.h>
-#include <algorithm>
-#include <cstring>
-#include <cassert>
 
+#include <string>
 
 struct const_slice_t {
 
-    const char *from, *till;
+    const char * from;
+    const char * till;
 
     const_slice_t (const char* str, size_t len) : from(str), till(str+len) {}
     const_slice_t (const char* str) : const_slice_t(str, strlen(str)+1) {}
@@ -118,7 +116,7 @@ struct slice_t {
     }
 };
 
-enum result_t {
+enum class result_t {
     DONE = 0,
     INCOMPLETE = 1,
     BAD_INPUT = -1
