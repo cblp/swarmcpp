@@ -13,13 +13,18 @@ fi
     git log | head -6 || :
 )
 
-if [ ! -e build ]; then
-    mkdir build
-fi
-if [ ! -e build/Makefile ]; then
-    cmake -B./build -H. || exit 1
-fi
-cd build
+rm -rf tmp
+mkdir tmp
+
+(
+    mkdir -p build
+    cd build
+    if [ ! -e Makefile ]; then
+        cmake .. || exit 1
+    fi
+    # make || exit 2 # TODO
+    echo
+)
 
 HEADERS="64x64"
 
