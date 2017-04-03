@@ -13,29 +13,24 @@ fi
     git log | head -6 || :
 )
 
-rm -rf tmp
-mkdir tmp
-
-(
+if [ ! -e build ]; then
     mkdir build
-    cd build
-    if [ ! -e Makefile ]; then
-        cmake .. || exit 1
-    fi
-    # make || exit 2 # TODO
-    echo
-)
+fi
+if [ ! -e build/Makefile ]; then
+    cmake -B./build -H. || exit 1
+fi
+cd build
 
 HEADERS="64x64"
 
 for HEADER in $HEADERS; do
     echo testing $HEADER
     TEST="test$HEADER"
-    make -C build "test$HEADER" || exit 2
+    make "test$HEADER" || exit 2
     echo
-    grep -v '^;' $TESTDIR/$HEADER.batt > tmp/$HEADER.ok
-    build/test$HEADER > tmp/$HEADER.out
-    diff -BU3 tmp/$HEADER.out tmp/$HEADER.ok || exit 3
+    grep -v '^;' ../$TESTDIR/$HEADER.batt | grep -v '^$' > $HEADER.ok
+    ./test$HEADER > $HEADER.out
+    diff -BU3 $HEADER.out $HEADER.ok || exit 3
     echo OK $HEADER
 done
 

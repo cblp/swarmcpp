@@ -83,9 +83,9 @@ namespace swarm {
 
         inline static int8_t char2int8 (uint8_t char64) { return CHAR2INT[char64]; }
 
-        int scan (const_slice_t& buf, size_t bm);
+        result_t scan (const_slice_t& buf, size_t bm);
 
-        int print (slice_t& buf, size_t bm) const;
+        result_t print (slice_t& buf, size_t bm) const;
 
     };
 
@@ -105,7 +105,7 @@ namespace swarm {
              58, 59, 60, 61, 62,-1,-1,-1, 63, -1};
 
 
-    int base_t::scan (const_slice_t& buf, size_t pos) {
+    result_t base_t::scan (const_slice_t& buf, size_t pos) {
         while (!buf.empty() && pos<10) {
             char c = *buf;
             if (c<0 || c>127) break;
@@ -125,21 +125,21 @@ namespace swarm {
         }
     }
 
-    int base_t::print (slice_t& buf, size_t bm) const {
+    result_t base_t::print (slice_t& buf, size_t bm) const {
         int len = 10;
         uint64_t v = value;
         while (!(v&63) && len>1) {
             v >>= 6;
             len--;
         }
-        if (buf.size()<len) return result_t::INCOMPLETE;
-        int i; //FIXME
-        for(i=len-1; i>=0; --i) {
-            buf[i] = INT2CHAR[v&63];
+        if (len>buf.size()) return result_t::INCOMPLETE;
+        size_t i = len;
+        while (i) {
+            buf[--i] = INT2CHAR[v&63];
             v >>= 6;
         }
         buf.skip(len);
-        return i==-1;
+        return result_t::DONE;
     }
 
 }

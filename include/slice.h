@@ -12,9 +12,10 @@ struct const_slice_t {
 
     const_slice_t (const char* str, size_t len) : from(str), till(str+len) {}
     const_slice_t (const char* str) : const_slice_t(str, strlen(str)+1) {}
+    const_slice_t () : from(0), till(0) {}
 
     bool empty () const {
-        return from==till;
+        return !(from<till);
     }
     void skip () {
         skipVoid(1);
@@ -32,6 +33,12 @@ struct const_slice_t {
     void skipTo(const char value) {
         const void* pos = memchr(from, value, till-from);
     }
+    void skipAll () {
+        from = till;
+    }
+    void copyTo (void* to) const {
+        memcpy(to, from, size());
+    }
 
     char operator * () {
         return *from;
@@ -40,6 +47,16 @@ struct const_slice_t {
     char operator [] (size_t pos) {
         assert(from+pos<till);
         return from[pos];
+    }
+
+    const_slice_t slice (size_t f, size_t t) const {
+        // TODO checks
+        return const_slice_t(from+f, t-f);
+    }
+
+    size_t seek (char c) const {
+        const char* at = (const char*) memchr(from, c, size());
+        return at ? at - from : SIZE_MAX;
     }
 
     /*bool printNumber (double num) {
@@ -73,10 +90,12 @@ struct slice_t {
     char * from;
     const char* till;
 
+    slice_t () : from(0), till(0) {}
+
     slice_t (char* to, size_t len) : from(to), till(to+len) {}
 
     size_t size() { return till-from; }
-    bool empty () { return from<till; }
+    bool empty () const { return !(from<till); }
     void putChar (char c) {
         assert(!empty());
         *from = c;
@@ -92,6 +111,11 @@ struct slice_t {
     char& operator * () {
         return *from;
     } // TODO asserts
+    void putInt8 (uint8_t b) {
+        assert(!empty());
+        *from = b;
+        from++;
+    }
 };
 
 enum result_t {
