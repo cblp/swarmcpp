@@ -1,8 +1,8 @@
 #ifndef SWARMCPP_64x64_H
 #define SWARMCPP_64x64_H
-#include <stdint.h>
+
 #include <string>
-#include <cstring>
+
 #include "slice.h"
 
 namespace swarm {
