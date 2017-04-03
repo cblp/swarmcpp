@@ -1,7 +1,10 @@
 #ifndef SWARMCPP_SLICE_H
 #define SWARMCPP_SLICE_H
 
+#include <cassert>
 #include <string>
+
+namespace swarm {
 
 struct const_slice_t {
 
@@ -29,7 +32,10 @@ struct const_slice_t {
 
     }
     void skipTo(const char value) {
-        const void* pos = memchr(from, value, till-from);
+        const char * const pos =
+            static_cast<char *>(memchr(from, value, till - from));
+        assert(pos);
+        from = pos;
     }
     void skipAll () {
         from = till;
@@ -121,5 +127,7 @@ enum class result_t {
     INCOMPLETE = 1,
     BAD_INPUT = -1
 };
+
+} // namespace swarm
 
 #endif //SWARMCPP_SLICE_H

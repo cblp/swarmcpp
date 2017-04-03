@@ -5,9 +5,10 @@
 #ifndef SWARMCPP_STAMP_H
 #define SWARMCPP_STAMP_H
 
-#include <cstring>
-#include <clocale>
 #include "64x64.h"
+
+// #include <cstring>
+// #include <clocale>
 
 namespace swarm {
 

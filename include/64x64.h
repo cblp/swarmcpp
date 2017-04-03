@@ -105,7 +105,7 @@ namespace swarm {
 
     result_t base_t::scan (const_slice_t& buf, size_t pos) {
         while (!buf.empty() && pos<10) {
-            char c = *buf;
+            uint8_t c = *buf;
             if (c<0 || c>127) break;
             const int8_t i = CHAR2INT[c];
             if (i==-1) break;
@@ -140,6 +140,6 @@ namespace swarm {
         return result_t::DONE;
     }
 
-}
+} // namespace swarm
 
 #endif
