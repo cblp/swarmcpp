@@ -27,21 +27,12 @@ namespace swarm {
             assert(scan(slice, 0)==result_t::DONE);
         }
 
-        bool operator == (const base_t& b) const {
-            return value==b.value;
-        }
-        bool operator <  (const base_t& b) const {
-            return value<b.value;
-        }
-        bool operator <=  (const base_t& b) const {
-            return value<=b.value;
-        }
-        bool operator >  (const base_t& b) const {
-            return value>b.value;
-        }
-        bool operator >=  (const base_t& b) const {
-            return value>=b.value;
-        }
+        bool operator == (const base_t& b) const { return value == b.value; }
+        bool operator <  (const base_t& b) const { return value <  b.value; }
+        bool operator <= (const base_t& b) const { return value <= b.value; }
+        bool operator >  (const base_t& b) const { return value >  b.value; }
+        bool operator >= (const base_t& b) const { return value >= b.value; }
+
         bool isZero () const {
             return value == 0L;
         }
@@ -88,9 +79,9 @@ namespace swarm {
     };
 
     const base_t base_t::ZERO = base_t();
-    const uint64_t base_t::CHAR_BIT_MASK = (1 << CHAR_BITS) - 1;
+    const uint64_t base_t::CHAR_BIT_MASK = (1 << CHAR_BITS) - 1; // different behavior on different platforms?
     const base_t base_t::INFINITE = 63L << (6 * 9);
-    const base_t base_t::INCORRECT = (1L<<60)-1;
+    const base_t base_t::INCORRECT = (1L << 60) - 1;
     const char base_t::INT2CHAR[65] =
             "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~";
     const int8_t base_t::CHAR2INT[] =
@@ -104,21 +95,26 @@ namespace swarm {
 
 
     result_t base_t::scan (const_slice_t& buf, size_t pos) {
-        while (!buf.empty() && pos<10) {
-            uint8_t c = *buf;
-            if (c<0 || c>127) break;
+        while (!buf.isEmpty() && pos < 10) {
+            const uint8_t c = *buf;
+            if (c < 0 || c > 127)
+                break;
             const int8_t i = CHAR2INT[c];
-            if (i==-1) break;
-            value = (value<<6) | i;
+            if (i == -1)
+                break;
+            value = (value << 6) | i;
             pos++;
             buf.skip();
         }
-        if (buf.empty() && pos<10) {
+        if (buf.isEmpty() && pos < 10) {
             return result_t::INCOMPLETE;
-        } else if (pos==0) {
+        } else if (pos == 0) {
             return result_t::BAD_INPUT;
         } else {
-            while (pos++<10) value <<= 6;
+            while (pos < 10) {
+                ++pos;
+                value <<= 6;
+            }
             return result_t::DONE;
         }
     }

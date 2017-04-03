@@ -6,52 +6,73 @@
 
 namespace swarm {
 
-struct const_slice_t {
+    namespace detail {
 
-    const char * from;
-    const char * till;
+        template <bool constancy, typename T> struct AddConstIf;
+        template <typename T> struct AddConstIf<false, T> { using type = T; };
+        template <typename T> struct AddConstIf<true,  T> { using type = const T; };
 
-    const_slice_t (const char* str, size_t len) : from(str), till(str+len) {}
-    const_slice_t (const char* str) : const_slice_t(str, strlen(str)+1) {}
-    const_slice_t () : from(0), till(0) {}
+        template <bool constancy> struct slice_base_t {
 
-    bool empty () const {
-        return !(from<till);
-    }
-    void skip () {
-        skipVoid(1);
-    }
-    size_t size () const {
-        return till-from;
-    }
+            using Char = typename AddConstIf<constancy, char>::type;
 
-    void skipVoid(size_t bytes) {
-        from = std::min(from+bytes, till);
-    }
-    void skip (size_t bytes) {
+            // fields
 
-    }
-    void skipTo(const char value) {
-        const char * const pos =
-            static_cast<char *>(memchr(from, value, till - from));
-        assert(pos);
-        from = pos;
-    }
-    void skipAll () {
-        from = till;
-    }
-    void copyTo (void* to) const {
-        memcpy(to, from, size());
-    }
+            Char * from;
+            const char * till;
 
-    char operator * () {
-        return *from;
-    }
+            // ctors
 
-    char operator [] (size_t pos) {
-        assert(from+pos<till);
-        return from[pos];
-    }
+            slice_base_t(Char * str, size_t len): from(str), till(str + len) {}
+
+            // properties
+
+            bool isEmpty() const { return from == till; }
+            size_t size() const {
+                assert(till >= from);
+                return till - from;
+            }
+
+            // element access
+
+            Char & operator [] (size_t at) {
+                assert(from + at >= from);
+                assert(from + at < till);
+                return from[at];
+            }
+
+            Char front() const { return (*this)[0]; }
+
+            // skipping
+
+            /// may overflow!
+            void skip(size_t len) { from += len; }
+
+            /// skip without overflow
+            void skipVoid(size_t bytes) {
+                from = std::min(from + bytes, till);
+            }
+
+            /// skip an character without overflow
+            void skip() {
+                skipVoid(1);
+            }
+
+            /// skip to a specified value
+            void skipTo(char value) {
+                Char * const pos =
+                    static_cast<Char *>(memchr(from, value, till - from));
+                if (pos)
+                    from = pos;
+            }
+
+        };
+
+    } // namespace swarm::detail
+
+struct const_slice_t: detail::slice_base_t<true> {
+
+    const_slice_t (const char * str) : slice_base_t(str, strlen(str) + 1) {}
 
     const_slice_t slice (size_t f, size_t t) const {
         // TODO checks
@@ -82,42 +103,19 @@ struct const_slice_t {
     }
 
     char scanChar () {
-        char ret = empty() ? (char)0 : *from;
+        char ret = isEmpty() ? (char)0 : *from;
         skip();
         return ret;
     }*/
 
-
 };
 
-struct slice_t {
-    char * from;
-    const char* till;
+struct slice_t: detail::slice_base_t<false> {
+    using slice_base_t::slice_base_t;
 
-    slice_t () : from(0), till(0) {}
-
-    slice_t (char* to, size_t len) : from(to), till(to+len) {}
-
-    size_t size() { return till-from; }
-    bool empty () const { return !(from<till); }
     void putChar (char c) {
-        assert(!empty());
+        assert(!isEmpty());
         *from = c;
-        from++;
-    }
-    void skip (size_t len) {
-        from += len;
-    }
-    char& operator [] (size_t at) {
-        assert(from+at<till);
-        return from[at];
-    }
-    char& operator * () {
-        return *from;
-    } // TODO asserts
-    void putInt8 (uint8_t b) {
-        assert(!empty());
-        *from = b;
         from++;
     }
 };
