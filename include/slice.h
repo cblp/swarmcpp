@@ -1,53 +1,89 @@
 #ifndef SWARMCPP_SLICE_H
 #define SWARMCPP_SLICE_H
-#include <stdint.h>
-#include <algorithm>
-#include <cstring>
+
 #include <cassert>
+#include <string>
 
+namespace swarm {
 
-struct const_slice_t {
+    namespace detail {
 
-    const char *from, *till;
+        template <bool constancy, typename T> struct AddConstIf;
 
-    const_slice_t (const char* str, size_t len) : from(str), till(str+len) {}
-    const_slice_t (const char* str) : const_slice_t(str, strlen(str)+1) {}
-    const_slice_t () : from(0), till(0) {}
+        template <typename T>
+        struct AddConstIf<false, T> { using type = T; };
 
-    bool empty () const {
-        return !(from<till);
-    }
-    void skip () {
-        skipVoid(1);
-    }
-    size_t size () const {
-        return till-from;
-    }
+        template <typename T>
+        struct AddConstIf<true,  T> { using type = const T; };
 
-    void skipVoid(size_t bytes) {
-        from = std::min(from+bytes, till);
-    }
-    void skip (size_t bytes) {
+        template <bool constancy> struct slice_base_t {
 
-    }
-    void skipTo(const char value) {
-        const void* pos = memchr(from, value, till-from);
-    }
-    void skipAll () {
-        from = till;
-    }
-    void copyTo (void* to) const {
-        memcpy(to, from, size());
-    }
+            using Char = typename AddConstIf<constancy, char>::type;
 
-    char operator * () {
-        return *from;
-    }
+            // fields
 
-    char operator [] (size_t pos) {
-        assert(from+pos<till);
-        return from[pos];
-    }
+            Char * from;
+            const char * till;
+
+            // ctors
+
+            slice_base_t(Char * str, size_t len): from(str), till(str + len) {}
+
+            // properties
+
+            bool isEmpty() const { return from == till; }
+            size_t size() const {
+                assert(till >= from);
+                return till - from;
+            }
+
+            // element access
+
+            Char & operator [] (size_t at) {
+                assert(from + at >= from);
+                assert(from + at < till);
+                return from[at];
+            }
+
+            Char front() const { return (*this)[0]; }
+
+            // skipping
+
+            /// may overflow!
+            void skip(size_t len) { from += len; }
+
+            /// skip without overflow
+            void skipVoid(size_t bytes) {
+                from = std::min(from + bytes, till);
+            }
+
+            /// skip an character without overflow
+            void skip() {
+                skipVoid(1);
+            }
+
+            /// skip to a specified value
+            void skipTo(char value) {
+                Char * const pos =
+                    static_cast<Char *>(memchr(from, value, till - from));
+                if (pos)
+                    from = pos;
+            }
+
+            // transformation
+
+            void copyTo(void * to) const {
+                memcpy(to, from, size());
+            }
+
+        };
+
+    } // namespace swarm::detail
+
+struct const_slice_t: detail::slice_base_t<true> {
+
+    using slice_base_t::slice_base_t;
+    const_slice_t(const char * str) : slice_base_t(str, strlen(str) + 1) {}
 
     const_slice_t slice (size_t f, size_t t) const {
         // TODO checks
@@ -78,41 +114,24 @@ struct const_slice_t {
     }
 
     char scanChar () {
-        char ret = empty() ? (char)0 : *from;
+        char ret = isEmpty() ? (char)0 : *from;
         skip();
         return ret;
     }*/
 
-
 };
 
-struct slice_t {
-    char * from;
-    const char* till;
+struct slice_t: detail::slice_base_t<false> {
+    using slice_base_t::slice_base_t;
 
-    slice_t () : from(0), till(0) {}
-
-    slice_t (char* to, size_t len) : from(to), till(to+len) {}
-
-    size_t size() { return till-from; }
-    bool empty () const { return !(from<till); }
     void putChar (char c) {
-        assert(!empty());
+        assert(!isEmpty());
         *from = c;
         from++;
     }
-    void skip (size_t len) {
-        from += len;
-    }
-    char& operator [] (size_t at) {
-        assert(from+at<till);
-        return from[at];
-    }
-    char& operator * () {
-        return *from;
-    } // TODO asserts
-    void putInt8 (uint8_t b) {
-        assert(!empty());
+
+    void putUInt8 (uint8_t b) {
+        assert(!isEmpty());
         *from = b;
         from++;
     }
@@ -123,5 +142,7 @@ enum result_t {
     INCOMPLETE = 1,
     BAD_INPUT = -1
 };
+
+} // namespace swarm
 
 #endif //SWARMCPP_SLICE_H

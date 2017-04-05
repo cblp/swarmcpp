@@ -61,10 +61,9 @@ namespace swarm {
 
         operator std::string() const {
             char str[11];
-            slice_t slice(str,10);
+            slice_t slice(str, 10);
             print(slice, 0);
-            *slice = 0;
-            return std::string(str, slice.from-str);
+            return std::string(str, slice.from - str);
         }
 
         // Constants
@@ -106,8 +105,8 @@ namespace swarm {
 
 
     result_t base_t::scan (const_slice_t& buf, size_t pos) {
-        while (!buf.empty() && pos<10) {
-            char c = *buf;
+        while (!buf.isEmpty() && pos < 10) {
+            char c = buf[0];
             if (c<0 || c>127) break;
             const int8_t i = CHAR2INT[c];
             if (i==-1) break;
@@ -115,7 +114,7 @@ namespace swarm {
             pos++;
             buf.skip();
         }
-        if (buf.empty() && pos<10) {
+        if (buf.isEmpty() && pos < 10) {
             return result_t::INCOMPLETE;
         } else if (pos==0) {
             return result_t::BAD_INPUT;

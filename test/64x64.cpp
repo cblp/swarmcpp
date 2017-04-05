@@ -47,7 +47,7 @@ int main (int argn, char** args) {
         char buf[11];
         slice_t slice(buf,10);
         i.print(slice, 0);
-        *slice = 0;
+        *slice.from = 0;
         size_t len = slice.from-buf;
         assert(len<=10);
         assert(len>0);
@@ -59,5 +59,5 @@ int main (int argn, char** args) {
         printf("%s\n", buf);
 
     }
-    
+
 }
