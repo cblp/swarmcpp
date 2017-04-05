@@ -69,7 +69,7 @@ namespace swarm {
 
         struct parser_t {
 
-            enum stage_t {
+            enum class stage_t {
                 SKIP=0,
                 SPEC=1,
                 SEPAR=2,
@@ -81,7 +81,7 @@ namespace swarm {
                 EOV=8
             };
 
-            enum mode_t {
+            enum class mode_t {
                 HUMAN=0,
                 ALL_FIXED=1,
                 ADAPT=2

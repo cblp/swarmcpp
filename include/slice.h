@@ -118,7 +118,7 @@ struct slice_t {
     }
 };
 
-enum result_t {
+enum class result_t {
     DONE = 0,
     INCOMPLETE = 1,
     BAD_INPUT = -1
